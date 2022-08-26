@@ -68,15 +68,14 @@ public class SongServiceImpl implements ISongService {
 
     @Override
     public Mono<ResponseEntity<String>> deleteSong(String idSong) {
-        return this.iSongRepository
-                .findById(idSong)
+        return this.iSongRepository.findById(idSong)
                 .switchIfEmpty(Mono.error(new Throwable(HttpStatus.NOT_FOUND.toString())))
-                .flatMap(album -> this.iSongRepository
-                        .deleteById(album.getIdAlbum())
-                        .map(monoVoid -> new ResponseEntity<>(idSong, HttpStatus.ACCEPTED)))
-                .thenReturn(new ResponseEntity<>(idSong, HttpStatus.ACCEPTED))
+                .flatMap(song -> this.iSongRepository.deleteById(idSong))
+                .map(stringResponseEntity -> new ResponseEntity<>(idSong,HttpStatus.ACCEPTED))
                 .onErrorResume(throwable -> Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND)));
     }
+
+
 
     @Override
     public SongDTO entityToDTO(Song s) {
