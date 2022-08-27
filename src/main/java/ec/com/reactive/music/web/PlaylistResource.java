@@ -7,6 +7,7 @@ import ec.com.reactive.music.service.ISongService;
 import ec.com.reactive.music.service.impl.AlbumServiceImpl;
 import ec.com.reactive.music.service.impl.PlaylistServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -46,12 +47,31 @@ public class PlaylistResource {
     }
 
 
-    /*@PutMapping("/addSongPlaylist/{playlistId}/{songId}")
-    private Mono<ResponseEntity<PlaylistDTO>> addSongPlaylist(@PathVariable String playlistId, @PathVariable String songID){
+    @PutMapping("/addSongPlaylist/{playlistId}")
+    private Mono<ResponseEntity<PlaylistDTO>> addSongPlaylist(@PathVariable String playlistId, @RequestParam(name="songID") String songID){
+        System.out.println(playlistId);
+        System.out.println(songID);
         return iSongService.findSongById(songID)
-                .flatMap(songDTOResponseEntity -> songDTOResponseEntity.getStatusCode().is3xxRedirection())
+                .flatMap(songDTOResponseEntity -> playlistService.addSongPlaylist(playlistId,songDTOResponseEntity.getBody()));
 
-    }*/
+
+    }
+
+    @DeleteMapping("/deleteSongPlaylist/{playlistId}")
+    private Mono<ResponseEntity<PlaylistDTO>> deleteSongPlaylist(@PathVariable String playlistId, @RequestParam(name="songID") String songID){
+        System.out.println(playlistId);
+        System.out.println(songID);
+        return iSongService.findSongById(songID)
+                .flatMap(songDTOResponseEntity -> playlistService.deleteSongPlaylist(playlistId,songDTOResponseEntity.getBody()));
+
+
+    }
+
+
+/*    getStatusCode().is4xxClientError()) ?
+            return  Mono.just(new ResponseEntity<>(new PlaylistDTO() ,HttpStatus.NOT_FOUND))
+            : playlistService.addSongPlaylist(playlistId, iSongService.findSongById(songID)
+            .flatMap(songDTOResponseEntity2 -> songDTOResponseEntity2.getBody()));*/
 
 
     //DELETE

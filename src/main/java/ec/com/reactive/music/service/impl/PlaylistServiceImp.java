@@ -5,6 +5,7 @@ import ec.com.reactive.music.domain.dto.PlaylistDTO;
 import ec.com.reactive.music.domain.dto.SongDTO;
 import ec.com.reactive.music.domain.entities.Album;
 import ec.com.reactive.music.domain.entities.Playlist;
+import ec.com.reactive.music.domain.entities.Song;
 import ec.com.reactive.music.repository.IAlbumRepository;
 import ec.com.reactive.music.repository.IPlaylistRepository;
 import ec.com.reactive.music.service.IAlbumService;
@@ -18,6 +19,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.LocalTime;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -56,12 +60,59 @@ public class PlaylistServiceImp implements IPlaylistService {
 
 
 
-    /*public Mono<ResponseEntity<PlaylistDTO>> addSongPlaylist(String playlistId,String songId){
-        Mono<ResponseEntity<PlaylistDTO>> foundPlaylistDTO = this.findPlaylistById(playlistId);
-        Mono<ResponseEntity<SongDTO>> foundSongDTO = iSongService.findSongById(songId);
-        foundPlaylistDTO
-                .
-    }*/
+    public Mono<ResponseEntity<PlaylistDTO>> addSongPlaylist(String playlistId,SongDTO songDTO){
+        return iPlaylistRepository
+                .findById(playlistId)
+                .switchIfEmpty(Mono.error(new Throwable(HttpStatus.NOT_FOUND.toString())))
+                .flatMap(playlist -> {
+                    List<Song> songs = playlist.getSongs();
+                    Song song = modelMapper.map(songDTO, Song.class);
+
+                        songs.add(song);
+                        LocalTime songDuration = song.getDuration();
+                        LocalTime playlistDuration = playlist.getDuration()
+                                .plusHours(songDuration.getHour())
+                                .plusMinutes(songDuration.getMinute())
+                                .plusSeconds(songDuration.getSecond());
+                        playlist.setDuration(playlistDuration);
+
+                    return iPlaylistRepository.save(playlist);
+                })
+                .map(this::entityToDTO)
+                .map(playlistDTO -> new ResponseEntity<>(playlistDTO, HttpStatus.ACCEPTED))
+                .onErrorResume(throwable -> Mono.just(new ResponseEntity<>(HttpStatus.BAD_REQUEST)));
+
+    }
+
+
+
+
+    public Mono<ResponseEntity<PlaylistDTO>> deleteSongPlaylist(String playlistId,SongDTO songDTO){
+        return iPlaylistRepository
+                .findById(playlistId)
+                .switchIfEmpty(Mono.error(new Throwable(HttpStatus.NOT_FOUND.toString())))
+                .flatMap(playlist -> {
+                    List<Song> songs = playlist.getSongs();
+                    Song song = modelMapper.map(songDTO, Song.class);
+
+                        songs.remove(song);
+                        LocalTime songDuration = song.getDuration();
+                        LocalTime playlistDuration = playlist.getDuration()
+                                .minusHours(songDuration.getHour())
+                                .minusMinutes(songDuration.getMinute())
+                                .minusSeconds(songDuration.getSecond());
+                        playlist.setDuration(playlistDuration);
+
+
+                    return iPlaylistRepository.save(playlist);
+                })
+                .map(this::entityToDTO)
+                .map(playlistDTO -> new ResponseEntity<>(playlistDTO, HttpStatus.ACCEPTED))
+                .onErrorResume(throwable -> Mono.just(new ResponseEntity<>(HttpStatus.BAD_REQUEST)));
+
+    }
+
+
 
 
 
@@ -115,6 +166,11 @@ public class PlaylistServiceImp implements IPlaylistService {
 
 
 
+
+
+
+
+
     @Override
     public Playlist DTOToEntity(PlaylistDTO playlistDTO) {
         return this.modelMapper.map(playlistDTO, Playlist.class);
@@ -124,7 +180,6 @@ public class PlaylistServiceImp implements IPlaylistService {
     public PlaylistDTO entityToDTO(Playlist playlist) {
         return this.modelMapper.map(playlist,PlaylistDTO.class);
     }
-
 
 
 

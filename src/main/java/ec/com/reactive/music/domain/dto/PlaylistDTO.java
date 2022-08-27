@@ -17,7 +17,7 @@ public class PlaylistDTO {
     private String idPlaylist;
     private String name;
     private String username;
-    private ArrayList<SongDTO> songs;
+    private ArrayList<SongDTO> songs = new ArrayList<>();
     private LocalTime duration = LocalTime.of(0,0,0);
 }
 
