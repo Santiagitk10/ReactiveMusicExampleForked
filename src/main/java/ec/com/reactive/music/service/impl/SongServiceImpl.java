@@ -33,7 +33,7 @@ public class SongServiceImpl implements ISongService {
                 .onErrorResume(throwable -> Mono.just(new ResponseEntity<>(Flux.empty(),HttpStatus.NO_CONTENT)));
     }
 
-    //TODO Review if new SongDTO works in the controller
+
     @Override
     public Mono<ResponseEntity<SongDTO>> findSongById(String id) {
         return this.iSongRepository
@@ -71,8 +71,10 @@ public class SongServiceImpl implements ISongService {
     public Mono<ResponseEntity<String>> deleteSong(String idSong) {
         return this.iSongRepository.findById(idSong)
                 .switchIfEmpty(Mono.error(new Throwable(HttpStatus.NOT_FOUND.toString())))
-                .flatMap(song -> this.iSongRepository.deleteById(idSong))
-                .map(stringResponseEntity -> new ResponseEntity<>(idSong,HttpStatus.ACCEPTED))
+                .flatMap(song -> this.iSongRepository
+                        .deleteById(song.getIdSong()))
+                .map(monoVoid -> new ResponseEntity<>(idSong,HttpStatus.ACCEPTED))
+                .thenReturn(new ResponseEntity<>(idSong,HttpStatus.ACCEPTED))
                 .onErrorResume(throwable -> Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND)));
     }
 
