@@ -79,7 +79,23 @@ class SongServiceImplTest {
     }
 
 
+    @Test
+    @DisplayName("findAllSongsError()")
+    void findAllSongsError() {
 
+        ResponseEntity<Flux<SongDTO>> songDTOResponse = new ResponseEntity<>(Flux.empty(),HttpStatus.NO_CONTENT);
+
+        Mockito.when(songRepositoryMock.findAll()).thenReturn(Flux.empty());
+
+        var service = songService.findAllSongs();
+
+        StepVerifier.create(service)
+                .expectNext(songDTOResponse)
+                .expectComplete().verify();
+
+        Mockito.verify(songRepositoryMock).findAll();
+
+    }
 
 
 
@@ -113,6 +129,25 @@ class SongServiceImplTest {
     }
 
 
+    @Test
+    @DisplayName("findSongByIdError()")
+    void findSongByIdError() { //Not found
+
+        ResponseEntity<SongDTO> songDTOResponse = new ResponseEntity<>(new SongDTO(),HttpStatus.NOT_FOUND);
+
+        Mockito.when(songRepositoryMock.findById(Mockito.any(String.class))).thenReturn(Mono.empty());
+
+        var service = songService.findSongById("12345");
+
+        StepVerifier.create(service)
+                .expectNext(songDTOResponse)
+                .expectComplete().verify();
+
+        Mockito.verify(songRepositoryMock).findById("12345");
+    }
+
+
+
 
 
     @Test
@@ -144,7 +179,34 @@ class SongServiceImplTest {
     }
 
 
+    @Test
+    @DisplayName("saveSongError()")
+    void saveSongError() {
 
+        Song songExpected = new Song();
+        songExpected.setIdSong("23456");
+        songExpected.setName("Smells Like Teen Spirit");
+        songExpected.setIdAlbum("98765");
+        songExpected.setLyricsBy("Pina Records");
+        songExpected.setProducedBy("Manolo Santana");
+        songExpected.setArrangedBy("Daddy Yankee");
+        songExpected.setDuration(LocalTime.of(00,02,24));
+
+        var songDTOexpected = modelMapper.map(songExpected,SongDTO.class);
+
+        ResponseEntity<SongDTO> songDTOResponse = new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+
+        Mockito.when(songRepositoryMock.save(Mockito.any(Song.class))).thenReturn(Mono.empty());
+
+        var service = songService.saveSong(songDTOexpected);
+
+        StepVerifier.create(service)
+                .expectNext(songDTOResponse)
+                .expectComplete().verify();
+
+        Mockito.verify(songRepositoryMock).save(songExpected);
+
+    }
 
 
     @Test
@@ -185,6 +247,35 @@ class SongServiceImplTest {
     }
 
 
+    @Test
+    @DisplayName("updateSongError()")
+    void updateSongError() {
+
+        Song songExpected = new Song();
+        songExpected.setIdSong("23456");
+        songExpected.setName("Smells Like Teen Spirit");
+        songExpected.setIdAlbum("98765");
+        songExpected.setLyricsBy("Pina Records");
+        songExpected.setProducedBy("Manolo Santana");
+        songExpected.setArrangedBy("Daddy Yankee");
+        songExpected.setDuration(LocalTime.of(00,02,24));
+
+        var songDTOexpected = modelMapper.map(songExpected,SongDTO.class);
+
+        ResponseEntity<SongDTO> songDTOResponse = new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+
+        Mockito.when(songRepositoryMock.findById(Mockito.any(String.class))).thenReturn(Mono.empty());
+
+        var service = songService.updateSong(songDTOexpected.getIdSong(),songDTOexpected);
+
+        StepVerifier.create(service)
+                .expectNext(songDTOResponse)
+                .expectComplete().verify();
+
+        Mockito.verify(songRepositoryMock).findById(songExpected.getIdSong());
+
+    }
+
 
     @Test
     @DisplayName("deleteSong()")
@@ -216,4 +307,36 @@ class SongServiceImplTest {
         Mockito.verify(songRepositoryMock).findById("23456");
         Mockito.verify(songRepositoryMock).deleteById("23456");
     }
+
+
+    @Test
+    @DisplayName("deleteSongError()")
+    void deleteSongError() {
+
+        Song songExpected = new Song();
+        songExpected.setIdSong("23456");
+        songExpected.setName("Smells Like Teen Spirit");
+        songExpected.setIdAlbum("98765");
+        songExpected.setLyricsBy("Pina Records");
+        songExpected.setProducedBy("Manolo Santana");
+        songExpected.setArrangedBy("Daddy Yankee");
+        songExpected.setDuration(LocalTime.of(00,02,24));
+
+
+        ResponseEntity<String> songDTOResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        Mockito.when(songRepositoryMock.findById(Mockito.any(String.class))).thenReturn(Mono.empty());
+
+        var service = songService.deleteSong(songExpected.getIdSong());
+
+        StepVerifier.create(service)
+                .expectNext(songDTOResponse)
+                .expectComplete().verify();
+
+        Mockito.verify(songRepositoryMock).findById(songExpected.getIdSong());
+
+    }
+
+
+
 }
